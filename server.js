@@ -9,10 +9,10 @@ var objectSchema = {
     name:String,
     role:String,
     hobbies:String
-}
+};
 
 // Instance of our model, Collection is called as objects
-var object = mongoose.model('object',mongoose.Schema(objectSchema, {strict: false}), 'objects');
+var object = mongoose.model('object',mongoose.Schema(objectSchema, {strict: false},{_id:false}), 'objects');
 
 // Server variables
 var app = express();
@@ -80,14 +80,37 @@ app.put('/api/objects/:id',function(req, res){
 
     object.count({_id:req.params.id}, function(err, count) {
         if (count > 0){
-            object.findByIdAndUpdate(req.params.id,req.body,{overwrite:true},function(err, post){
-                if (err) { return err;}
-                else{
-                    object.findById(req.params.id, function(err, doc){
-                        res.json(doc);
-                    }).select('-__v');
-                }
-            });
+
+            if (req.body._id){
+                object.create(req.body, function (err, post) {
+                    if (err){
+                        return err;
+                    }
+                    else{
+
+                        object.findById(post._id, function (err, doc) {
+                            object.findByIdAndRemove(req.params.id, req.body, function(err, post){
+                                if (err) {return err;}
+                                else{
+                                    res.send(doc);
+                                }
+                            });
+                        }).select('-__v');
+
+                    }
+                });
+            }
+            else {
+                object.update({_id : req.params.id}, req.body,{overwrite:true},function(err, post){
+                    if (err) { return err;}
+                    else{
+                        object.findById(req.params.id, function(err, doc){
+                            res.json(doc);
+                        }).select('-__v');
+                    }
+                });
+            }
+
         }
         else{
             res.status(404).send("ID does not exists");
@@ -105,7 +128,7 @@ app.delete('/api/objects/:id', function(req, res){
         else{
             res.send();
         }
-    })
+    });
 });
 
 // Instantiate server
