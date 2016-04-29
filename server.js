@@ -51,7 +51,7 @@ app.get('/api/objects/', function(req, res){
     object.find(function(err, doc){
         var responseArray = [];
         for (var index = 0; index<doc.length;index += 1){
-            responseArray.push(req.host+req.url+doc[index]._id);
+            responseArray.push("http://"+req.host+req.url+doc[index]._id);
         }
         res.json(responseArray);
     });
