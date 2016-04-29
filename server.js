@@ -40,8 +40,9 @@ app.use(function (err, req, res, next) {
 // RETURNS : A JSON object, appropriate document with the corresponding ID
 app.get('/api/objects/:id', function(req, res){
     object.findById(req.params.id, function(err, doc){
-        res.json(doc);
-    })
+        doc == null?res.status(404).send("Not Found"):res.json(doc);
+
+    }).select('-__v');
 });
 
 // Retrieve all the id's of the documents in the collection
@@ -50,10 +51,10 @@ app.get('/api/objects/', function(req, res){
     object.find(function(err, doc){
         var responseArray = [];
         for (var index = 0; index<doc.length;index += 1){
-            responseArray.push(doc[index]._id);
+            responseArray.push(req.host+req.url+doc[index]._id);
         }
         res.json(responseArray);
-    })
+    });
 });
 
 // Create a document to store it in the database
@@ -64,7 +65,11 @@ app.post('/api/objects/', function(req, res){
             return err;
         }
         else{
-            res.send(post);
+
+            object.findById(post._id, function (err, doc) {
+                res.send(doc);
+            }).select('-__v');
+
         }
     });
 });
@@ -73,14 +78,22 @@ app.post('/api/objects/', function(req, res){
 // RETURNS: A JSON object, the updated document with the corresponding ID
 app.put('/api/objects/:id',function(req, res){
 
-    object.findByIdAndUpdate(req.params.id,req.body,function(err, post){
-        if (err) { return err;}
+    object.count({_id:req.params.id}, function(err, count) {
+        if (count > 0){
+            object.findByIdAndUpdate(req.params.id,req.body,{overwrite:true},function(err, post){
+                if (err) { return err;}
+                else{
+                    object.findById(req.params.id, function(err, doc){
+                        res.json(doc);
+                    }).select('-__v');
+                }
+            });
+        }
         else{
-            object.findById(req.params.id, function(err, doc){
-                res.json(doc);
-            })
+            res.status(404).send("ID does not exists");
         }
     });
+
 });
 
 // Delete a specific document with it's id

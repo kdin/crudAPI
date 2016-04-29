@@ -22,7 +22,6 @@ Instructions for setting up and executing the code and tests:
 - Executing the code: run the command "node server.js", you can see the server running at "localhost:3000/api/objects/"
 - Executing the tests : DONT START THE SERVER, run the command "npm test", you see the status of tests
 
-- Rest of the usage information correspond exactly to the Assignment document
 
 Database information:
 - I have used an online MongoDB instance from Mongolabs and connected using their driver into this API through Mongoose
