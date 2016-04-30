@@ -11,9 +11,9 @@ var crudApp = require("../server.js");
 // Change the URL as you wish (Either test it local or the cloud API on OpenShift) -- CURRENTLY SET TO LOCAL
 // Normally I would put these in a separate file. I put these in the same file to make it easy for the reader
 var baseUrl = "http://localhost:3000/api/objects/";
-var getUrl = baseUrl+"5722b177824401282653f435";
-var updateUrl = baseUrl+"5722b182824401282653f436";
-var deleteUrl = baseUrl+"5722b16d824401282653f434";
+var getUrl = baseUrl+"563459a0-0e76-11e6-828a-13b59c43d51a";
+var updateUrl = baseUrl+"5d7901c0-0e76-11e6-828a-13b59c43d51a";
+var deleteUrl = baseUrl+"6b975b30-0e76-11e6-828a-13b59c43d51a";
 
 var postTest = {
     uri:baseUrl,
