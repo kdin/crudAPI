@@ -1,5 +1,6 @@
 var express = require('express');
 var mongoose = require('mongoose');
+var uuid = require('node-uuid');
 
 // Using Mongolab's driver to connect to a mongo instance on the cloud
 mongoose.connect('mongodb://kdin:kdin@ds019481.mlab.com:19481/cruddb');
@@ -39,95 +40,98 @@ app.use(function (err, req, res, next) {
 // Read a document with it's ID
 // RETURNS : A JSON object, appropriate document with the corresponding ID
 app.get('/api/objects/:id', function(req, res){
-    object.findById(req.params.id, function(err, doc){
-        doc == null?res.status(404).send("Not Found"):res.json(doc);
+    object.find({uid:req.params.id}, function(err, doc){
+        doc.length === 0?res.status(404).send("Not Found"):res.json(doc[0]);
 
-    }).select('-__v');
+    }).select('-__v').select('-_id');
 });
 
 // Retrieve all the id's of the documents in the collection
 // RETURNS : An array of document ID's
 app.get('/api/objects/', function(req, res){
-    object.find(function(err, doc){
+    object.distinct("uid",function(err, doc){
         var responseArray = [];
         for (var index = 0; index<doc.length;index += 1){
-            responseArray.push("http://"+req.host+req.url+doc[index]._id);
+            responseArray.push("http://"+req.host+req.url+doc[index]);
         }
-        res.json(responseArray);
+        res.send(responseArray);
     });
 });
 
 // Create a document to store it in the database
 // RETURNS : A JSON object, document that is posted recently
 app.post('/api/objects/', function(req, res){
-    object.create(req.body, function (err, post) {
-        if (err){
-            return err;
+    if (req.body._id){
+        res.send("CANNOT USE _id : MONGODB'S DEFAULT IDENTIFIER");
+    }
+    else{
+        if (req.body.uid){
+            object.count({uid:req.body.uid}, function (err, count) {
+                if(count>0){
+                    res.send("DOCUMENT WITH UID ALREADY EXISTS");
+                }
+                else{
+                    object.create(req.body, function(err, post){
+                        if (err){ return err;}
+                        else{
+                            object.findById(post._id, function (err, doc) {
+                                res.send(doc);
+                            }).select('-__v').select('-_id');
+                        }
+                    });
+                }
+            });
         }
         else{
-
-            object.findById(post._id, function (err, doc) {
-                res.send(doc);
-            }).select('-__v');
-
+            req.body.uid = uuid.v1();
+            object.create(req.body, function(err, post){
+                if (err){ return err;}
+                else{
+                    object.findById(post._id, function (err, doc) {
+                        res.send(doc);
+                    }).select('-__v').select('-_id');
+                }
+            });
         }
-    });
+
+    }
 });
 
 // Update a specific document with it's ID
 // RETURNS: A JSON object, the updated document with the corresponding ID
 app.put('/api/objects/:id',function(req, res){
-
-    object.count({_id:req.params.id}, function(err, count) {
-        if (count > 0){
-
-            if (req.body._id){
-                object.create(req.body, function (err, post) {
-                    if (err){
-                        return err;
-                    }
-                    else{
-
-                        object.findById(post._id, function (err, doc) {
-                            object.findByIdAndRemove(req.params.id, req.body, function(err, post){
-                                if (err) {return err;}
-                                else{
-                                    res.send(doc);
-                                }
-                            });
-                        }).select('-__v');
-
-                    }
-                });
-            }
-            else {
-                object.update({_id : req.params.id}, req.body,{overwrite:true},function(err, post){
+    if (req.body._id) {
+        res.send("DO NOT TOUCH THE DEFAULT _id");
+    }
+    else{
+        object.count({uid:req.params.id}, function(err, count) {
+            if (count > 0){
+                if (!req.body.uid){
+                    req.body.uid = req.params.id;
+                }
+                object.update({uid : req.params.id}, req.body,{overwrite:true},function(err, post){
                     if (err) { return err;}
                     else{
-                        object.findById(req.params.id, function(err, doc){
-                            res.json(doc);
-                        }).select('-__v');
+                        object.find({uid:req.body.uid}, function(err, doc){
+                            res.json(doc[0]);
+                        }).select('-__v').select('-_id');
                     }
                 });
             }
-
-        }
-        else{
-            res.status(404).send("ID does not exists");
-        }
-    });
-
+            else{
+                res.status(404).send("ID does not exists");
+            }
+        });
+    }
 });
 
 // Delete a specific document with it's id
 // RETURNS: Null, when the operation is successful
 app.delete('/api/objects/:id', function(req, res){
 
-    object.findByIdAndRemove(req.params.id, req.body, function(err, post){
+    object.remove({uid:req.params.id}, function(err, post){
         if (err) {return err;}
-        else{
-            res.send();
-        }
+        else {res.send();}
     });
 });
 

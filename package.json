@@ -27,13 +27,14 @@
     "express": "^3.4.8",
     "mongoose": "^4.4.13",
     "multer": "^1.1.0",
+    "node-uuid": "^1.4.7",
     "request": "^2.72.0"
   },
   "devDependencies": {
     "jasmine-node": "^1.14.5"
   },
-  "scripts":{
-    "test":"jasmine-node spec"
+  "scripts": {
+    "test": "jasmine-node spec"
   },
   "bundleDependencies": [],
   "private": true,
