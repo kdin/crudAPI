@@ -1,9 +1,12 @@
 var express = require('express');
 var mongoose = require('mongoose');
 var uuid = require('node-uuid');
-
+var config = require('config')
 // Using Mongolab's driver to connect to a mongo instance on the cloud
-mongoose.connect('mongodb://kdin:kdin@ds019481.mlab.com:19481/cruddb');
+
+mongoose.connect('mongodb://' + config.db.username +':'+ config.db.password + '@' + config.db.driverPath + '/' + config.db.database);
+
+
 
 // Sample object schema : This can be overridden, meaning the schema is not strictly followed to support arbitrary inputs
 var objectSchema = {
